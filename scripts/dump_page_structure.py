@@ -1,5 +1,5 @@
 """
-通用网页爬虫选择器调试工具
+通用网页爬虫选择器调试工具（selector-fix）
 - 用 Selenium 打开目标页面，dump 全部 CSS 结构到文件
 - 支持任意 URL，自动分析 8 个维度的 DOM 结构
 - 输出纯文本报告 + page_source HTML + 截图
@@ -7,12 +7,11 @@
 用法:
   python dump_page_structure.py --url "https://example.com/page" --output-dir ./debug
   python dump_page_structure.py --url "https://example.com/page" --auto   # 跳过登录等待
+  python dump_page_structure.py --url "https://example.com/page" --no-login  # 不先打开首页
 """
 
 import argparse
-import json
 import os
-import sys
 import time
 from datetime import datetime
 

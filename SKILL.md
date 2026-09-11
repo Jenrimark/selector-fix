@@ -1,14 +1,9 @@
 ---
 name: selector-fix
 description: "当网页爬虫/Selenium 脚本的 CSS 选择器失效时使用——页面能找到元素但抓不到数据、返回空、或抓到错误内容。通过自动化 dump 页面结构来定位正确选择器。触发关键词：选择器失效、selector not found、抓不到评论、元素定位失败、爬虫改版。"
-version: "1.0.0"
-license: MIT
-metadata:
-  hermes:
-    tags: [selenium, scraper, css-selector, web-scraping, debugging, dom]
 ---
 
-# 调试网页爬虫选择器
+# selector-fix：网页爬虫选择器调试
 
 ## 核心理念
 
@@ -18,33 +13,24 @@ metadata:
 
 ## 何时使用
 
-- 爬虫日志出现 "未找到 XX 按钮"、"评论数为 0"、"抓取 0 条"
+- 爬虫日志出现"未找到 XX 按钮"、"评论数为 0"、"抓取 0 条"
 - 抓到的数据不是目标内容（如把促销文字当成评分）
 - 分页/翻页失败，只能看到第一页
 - 网站改版后爬虫全面失效
-- **不要用于**：网络错误、风控封锁、登录失败——这些不是选择器问题
+
+**不要用于**：网络错误、风控封锁、登录失败——这些不是选择器问题。
 
 ## 思维流程
 
-```dot
-digraph selector_debug {
-  "确认症状" [shape=box];
-  "隔离问题层" [shape=diamond];
-  "创建 Dump 脚本" [shape=box];
-  "运行 Dump" [shape=box];
-  "分析输出" [shape=box];
-  "定位根因" [shape=diamond];
-  "修复选择器/逻辑" [shape=box];
-  "端到端验证" [shape=box];
-
-  "确认症状" -> "隔离问题层";
-  "隔离问题层" -> "创建 Dump 脚本" [label="选择器问题"];
-  "创建 Dump 脚本" -> "运行 Dump";
-  "运行 Dump" -> "分析输出";
-  "分析输出" -> "定位根因";
-  "定位根因" -> "修复选择器/逻辑";
-  "修复选择器/逻辑" -> "端到端验证";
-}
+```mermaid
+flowchart TD
+    A[确认症状] --> B{隔离问题层}
+    B -- 选择器问题 --> C[创建 Dump 脚本]
+    C --> D[运行 Dump]
+    D --> E[分析输出]
+    E --> F{定位根因}
+    F --> G[修复选择器/逻辑]
+    G --> H[端到端验证]
 ```
 
 ## 第一步：确认症状，隔离问题层
@@ -65,18 +51,20 @@ digraph selector_debug {
 
 核心原则：**用和爬虫相同的浏览器环境（profile/cookie），但只做观察，不做业务逻辑。**
 
-### 脚本模板
+### 使用内置脚本
 
 ```bash
-python "${CLAUDE_SKILL_DIR}/scripts/dump_page_structure.py" \
+python scripts/dump_page_structure.py \
   --url "https://example.com/target-page" \
   --output-dir "./debug_output" \
   --auto
 ```
 
-### 如果需要自定义脚本
+脚本位于本 Skill 的 `scripts/` 目录。在 Agent 环境中运行时通过技能目录定位（对应仓库内的相对路径 `scripts/dump_page_structure.py`）。
 
-当模板不适用时（特殊登录、SPA 应用等），按以下结构创建：
+### 自定义脚本
+
+当内置脚本不适用时（特殊登录、SPA 应用等），按以下结构创建：
 
 ```python
 # 核心结构（伪代码）
@@ -88,7 +76,7 @@ wait_for_page_ready()
 analysis = driver.execute_script("""
     return {
         reviewClasses: findAllClassesMatching(/review/i),
-        targetElements: querySelectorAll('[class*=\"target\"]'),
+        targetElements: querySelectorAll('[class*="target"]'),
         firstCardHTML: firstCard?.outerHTML?.substring(0, 3000),
         paginationElements: findAllPagination(),
     }
